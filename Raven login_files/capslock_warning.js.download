@@ -1,0 +1,100 @@
+/**
+ * Support for warning the user that Caps Lock is on, if there are password
+ * fields on the page, so that they don't mistakenly enter a password in the
+ * wrong case.
+ */
+$(document).ready(function() {
+    // Some systems will always return upper-case characters if Caps Lock is
+    // on, rather than inverting the case of characters
+    var capsLockAlwaysUpper = /MacPPC|MacIntel/.test(window.navigator.platform);
+
+    // Create the Caps Lock warning element (initially hidden)
+    var capsLockWarning = $('<div id="tooltip"></div>');
+    capsLockWarning.html('<b>Warning:</b> Caps Lock is on');
+    capsLockWarning.hide();
+    $('body').append(capsLockWarning);
+
+    // The current state of the Caps Lock warning element
+    var capsLockWarningShown = false;
+
+    // The password field that currently has focus
+    var currentPasswdField = null;
+
+    // The current state of the Caps Lock key (null => unknown)
+    var capsLockOn = null;
+
+    // Disable Internet Explorer's Caps Lock warning
+    document.msCapsLockWarningOff = true;
+
+    /**
+     * Show or hide the Caps Lock warning as appropriate. This is triggered
+     * by the various events below.
+     */
+    var show_hide_warning = function() {
+        if (capsLockOn && currentPasswdField) {
+            if (!capsLockWarningShown) {
+                var top = currentPasswdField.offset().top -
+                          capsLockWarning.outerHeight() - 10;
+                var left = currentPasswdField.offset().left +
+                           currentPasswdField.width() -
+                           capsLockWarning.outerWidth() / 2;
+                capsLockWarning.css({ top: top+'px', left: left+'px' });
+                capsLockWarning.show();
+                capsLockWarningShown = true;
+            }
+        } else if (capsLockWarningShown) {
+            capsLockWarning.hide();
+            capsLockWarningShown = false;
+        }
+    }
+
+    // Respond to keypress events which allow us to determine the state of
+    // the Caps Lock key with certainty. For other keypress events, do
+    // nothing (assume the Caps Lock state hasn't changed).
+    $('body').bind('keypress', function(e) {
+        var shiftPressed = e.shiftKey ? e.shiftKey :
+                           e.modifiers ? (e.modifiers & 4) !== 0 : false;
+        var keyString = String.fromCharCode(e.which);
+
+        if (keyString.toUpperCase() !== keyString.toLowerCase()) {
+            if (keyString.toLowerCase() === keyString) {
+                capsLockOn = shiftPressed;
+                show_hide_warning();
+            } else if (!capsLockAlwaysUpper) {
+                capsLockOn = !shiftPressed;
+                show_hide_warning();
+            }
+        }
+    });
+
+    // Respond to Caps Lock keydown events, which imply the state of the Caps
+    // Lock key is being toggled. We use keydown for this, since we might not
+    // get the corresponding keyup or keypress event, if we lose focus while
+    // the Caps Lock key is being held down.
+    $('body').bind('keydown', function(e) {
+        if (e.which === 20 && capsLockOn !== null) {
+            capsLockOn = !capsLockOn;
+            show_hide_warning();
+        }
+    });
+
+    // Respond to changes in the window's focus. After such a change we don't
+    // know the state of the Caps Lock key anymore.
+    $(window).bind('focus', function(e) {
+        capsLockOn = null;
+        show_hide_warning();
+    });
+
+    // Respond to changes in the focus of each password field on the page.
+    // We only want to show the warning while one of these fields has focus.
+    $('input[type=password]').each(function() {
+        $(this).bind('focusin', function(e) {
+            currentPasswdField = $(this);
+            show_hide_warning();
+        });
+        $(this).bind('focusout', function(e) {
+            currentPasswdField = null;
+            show_hide_warning();
+        });
+    });
+});

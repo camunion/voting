@@ -1,0 +1,126 @@
+/**
+ * Support for revealing the contents of password fields, so a user can see
+ * what they have typed.
+ *
+ * This is similar to the password-reveal feature in Internet Explorer,
+ * except that it uses a click-on/click-off action, rather than only showing
+ * the password while the mouse button is pressed. Also it doesn't rely on
+ * hover-over, since it is required to work on touch devices.
+ */
+$(document).ready(function() {
+    // Test whether the browser supports changing an input field's type.
+    // Older versions of Internet Explorer (IE7 and IE8) explicitly prohibit
+    // this. Newer versions (IE9 and above) are OK though. If it isn't
+    // supported, there's not much we can do, so just exit.
+    try {
+        var field = $('input[type=password]').first();
+        field.prop('type', 'text');
+        field.prop('type', 'password');
+    } catch (err) {
+        return;
+    }
+
+    // Disable Internet Explorer's password reveal feature
+    var style = $('<style>::-ms-reveal, ::-ms-clear { display: none !important; }</style>');
+    $('html > head').append(style);
+
+    // Add our own password reveal feature to each password field
+    $('input[type=password]').each(function() {
+        var field = $(this);
+
+        // Disable some HTML5 features on the field that aren't a good idea
+        // for text fields used for passwords
+        field.attr('autocapitalize', 'off');
+        field.attr('autocomplete', 'off');
+        field.attr('autocorrect', 'off');
+        field.attr('spellcheck', false);
+
+        // Button to show/hide the password
+        var btn = $('<div>Show</div>');
+
+        btn.css({
+            'border-left': '1px solid #ccc',
+            'color': '#bbb',
+            'cursor': 'pointer',
+            'display': 'inline-block',
+            'font-size': '11px',
+            'font-weight': 'bold',
+            'padding-left': '3px',
+            'position': 'absolute'
+        });
+        field.after(btn);
+
+        // Button positioning, depending on the field's size and position
+        var positionBtn = function() {
+            var fieldPos = field.position();
+            var left = fieldPos.left + field.outerWidth() - btn.outerWidth();
+            var top = fieldPos.top;
+            var margin = (field.outerHeight() - btn.outerHeight()) / 2;
+            btn.css('left', left - margin);
+            btn.css('top', top + margin);
+
+            // Add padding to the field to keep its text clear of the button
+            var fieldPadding = parseFloat(field.css('padding-right'));
+            var padding = btn.outerWidth() + 10;
+
+            if (padding != fieldPadding) {
+                // Adjust the field's padding without changing its width
+                var width = field.outerWidth();
+                field.css('padding-right', padding);
+
+                var delta = field.outerWidth() - width;
+                if (delta != 0) field.width(field.width() - delta);
+            }
+        }
+        positionBtn();
+        $(window).resize(positionBtn);
+        $(window).on('orientationchange', positionBtn);
+        setInterval(positionBtn, 100);
+
+        // Hover-effect to make the button more obvious
+        btn.hover(function() {
+            btn.css('color', '#aaa');
+        }, function() {
+            btn.css('color', '#bbb');
+        });
+
+        // Show/hide the password text when the button is pressed
+        var pwdShown = false;
+        var pwdShownTime = 0;
+        var btnDown = false;
+
+        var showPasswd = function(show) {
+            var type = show ? 'text' : 'password';
+            var label = show ? 'Hide' : 'Show';
+
+            field.prop('type', type);
+            btn.text(label);
+            positionBtn();
+        }
+
+        btn.mousedown(function() {
+            showPasswd(!pwdShown);
+            pwdShown = !pwdShown;
+            pwdShownTime = (new Date).getTime();
+            btnDown = true;
+            field.focus();
+        });
+
+        btn.mouseup(function() {
+            btnDown = false;
+        });
+
+        // Automatically re-hide the password text after 5 seconds, unless
+        // the button is still pressed
+        var rehidePasswd = function(show) {
+            if (pwdShown && !btnDown) {
+                var now = (new Date).getTime();
+                if (now > pwdShownTime + 5000) {
+                    showPasswd(false);
+                    pwdShown = false;
+                }
+            }
+        }
+        setInterval(rehidePasswd, 500);
+    });
+});

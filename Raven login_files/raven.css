@@ -1,0 +1,78 @@
+/* In-line help links */
+
+.helplink {
+}
+
+
+/* Error messages above forms following form submission */
+.error { 
+  color: rgb(185, 74, 72);
+  padding: 0.3em 0.5em;
+  border: 1px solid rgb(185, 74, 72);
+}
+
+/* Message supplied by website (shown by describe-request.mason) */
+.msg { 
+}
+
+/* 'Close this window' link on help pages */
+.ctrmsg { 
+}
+
+/* Site description (shown by describe-request.mason) */
+.sitedesc {
+  font-weight: bold; 
+}
+
+/* General formatting of host names and URLs */
+.url { 
+  font-family: monospace; 
+}
+
+/* Formatting of user-ids */
+.principal { 
+  font-family: monospace; 
+}
+
+/* Generic 'fixed-width formatting */
+.tt { 
+  font-family: monospace; 
+}
+
+/* Description text for disabled form controles */
+.disabled {
+  color: #999;
+}
+
+/* Replace campl-icon with a version that loads icons with transparent
+   backgrounds */
+.raven-icon {
+  display:inline-block;
+  background:url(images/icon-links-sprite-trans.png) no-repeat 0 0;
+  width:20px;
+  height:25px;
+  margin-right:2px;
+  position:relative;
+  top:5px
+}
+
+.raven-print-icon{background-position:0 5px}
+.raven-lock-icon{background-position: 0 -25px}
+.raven-help-icon{background-position: 0 -55px}
+.raven-info-icon{background-position: 0 -80px}
+.raven-excel-icon{background-position:0 -110px}
+.raven-pdf-icon{background-position:  0 -135px}
+.raven-word-icon{background-position: 0 -159px}
+
+.raven-logo {
+  float: right; 
+  margin: 0 0 1em;
+}
+
+.raven-right {
+  float: right;
+}
+
+.raven-clear {
+  clear: both;
+}
